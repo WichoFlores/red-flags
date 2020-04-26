@@ -24,22 +24,35 @@ function shuffleArray(array) {
 
 io.on('connection', socket => {
   socket.on('disconnect', () => {
-    // If the leader exited, make a new leader
-    if (players.length > 0 && socket.id === players[0].id) {
-      console.log("Leader left!")
-      io.to(players[1].id).emit('set leader', null)
+    if (players.length > 0 ) {
+      // If the leader exited, make a new leader
+      if (socket.id === players[0].id) {
+        console.log("Leader left!")
+        if (players.length > 1) {
+          io.to(players[1].id).emit('set leader', null)
+        }
+      }
+
+      players = players.filter(client => client.id != socket.id)
+      socket.broadcast.emit('update players', players)
+      console.log(`Total users: ${players.length}`) 
+      return
     }
-    players = players.filter(client => client.id != socket.id)
-    socket.broadcast.emit('update players', players)
-    console.log(`Total users: ${players.length}`) 
-    return
   })
 
 
   socket.on('new player', (name) => {
     console.log("New player:", name)
     // Add client
-    players.push({ id: socket.id, name })
+    players.push({ 
+      id: socket.id, 
+      name,
+      date: {
+        perk1: "",
+        perk2: "",
+        flag: ""
+      }
+     })
     console.log(`Total players: ${players.length}`)
 
     // If first player, make him leader
@@ -49,7 +62,9 @@ io.on('connection', socket => {
     // Update other players list
     io.emit('update players', players)
   })
+
   socket.on('start game', () => {
+    socket.broadcast.emit('start game')
     // db query
     // set deck
     dummyDeck = [1,2,3,4]
@@ -63,6 +78,13 @@ io.on('connection', socket => {
       hand.push(dummyDeck.pop())
       io.to(player.id).emit('draw', hand)
     })
+  })
+
+  socket.on('set perks', (perks) => {
+    let player = players.find(player => player.id == socket.id) 
+    player.date.perk1 = perks[0]
+    player.date.perk2 = perks[1]
+    io.emit('update players', players)
   })
 })
 
