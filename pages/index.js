@@ -62,11 +62,18 @@ const Index = () => {
         }
       </div> :
       <div>
+        <h2>Perks Phase</h2>
         <h3>Choose 2 perks:</h3>
         <ul>
           {hand.map(card => <li key={card}>{card}</li>)}
         </ul>
+        <h3>Selection:</h3>
+        <ul>
+          {selected.map(card => <li key={card}>{card}</li>)}
+        </ul>
+        <button disabled={selected.length}>Set perks</button>
       </div>
+      
       }
     </div>
   )
